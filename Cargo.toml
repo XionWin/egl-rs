@@ -8,5 +8,3 @@ edition = "2021"
 [dependencies]
 libc = "*"
 bitflags = "*"
-drm-rs = { path="../drm-rs" }
-gbm-rs = { path="../gbm-rs" }

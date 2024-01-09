@@ -1,10 +1,11 @@
 // use std::os::unix::prelude::RawFd;
 
+use std::os::fd::RawFd;
+
 use super::extension::*;
 
 #[derive(Debug)]
 pub struct Context {
-    pub gbm: gbm_rs::Gbm,
     pub display: crate::ffi::EglDisplay,
     pub config: crate::ffi::EglConfig,
     pub context: crate::ffi::EglContext,
@@ -17,7 +18,7 @@ pub struct Context {
 
 #[allow(dead_code)]
 impl Context {
-    pub fn new(gbm: gbm_rs::Gbm, vertical_synchronization: bool) -> Self {
+    pub fn new(surface_fd: RawFd, device_fd: RawFd, width: libc::c_int, height: libc::c_int, vertical_synchronization: bool) -> Self {
         let version = get_version_by_display(std::ptr::null());
         println!("client version: {:?}", version);
         let vendor = get_vendor_by_display(std::ptr::null());
@@ -25,7 +26,7 @@ impl Context {
         let extensions = get_extensions_by_display(std::ptr::null()).expect("Get client extensions error");
         println!("client extensions: {:?}", extensions);
 
-        let display = get_display(&gbm, &extensions);
+        let display = get_display(device_fd, &extensions);
         let (major, minor) = egl_initialize(display);
         let config = get_config(display);
 
@@ -42,14 +43,13 @@ impl Context {
             crate::def::Definition::NONE,
         ];
         let context = get_context(display, config, &context_attrib as _);
-        let surface = get_surface(display, config, &gbm);
+        let surface = get_surface(display, config, surface_fd);
 
         egl_make_current(display, surface, context);
 
         Self {
-            width: gbm.get_width(),
-            height: gbm.get_height(),
-            gbm,
+            width,
+            height,
             display,
             config,
             context,
