@@ -9,7 +9,7 @@ pub(crate) fn get_display(gbm: &gbm_rs::Gbm) -> EglDisplay {
     let vendor = get_vendor_by_display(std::ptr::null());
     println!("vendor: {:?}", vendor);
     let extensions = get_extensions_by_display(std::ptr::null());
-    println!("extensions: {:?}", extensions);
+    println!("client extensions: {:?}", extensions);
 
     let device_handle = gbm.get_surface().get_device().get_handle();
     let display = match extensions {
