@@ -4,7 +4,7 @@ use super::extension::*;
 
 #[derive(Debug)]
 pub struct Context {
-    pub gbm: gbm::Gbm,
+    pub gbm: gbm_rs::Gbm,
     pub display: crate::ffi::EglDisplay,
     pub config: crate::ffi::EglConfig,
     pub context: crate::ffi::EglContext,
@@ -15,8 +15,9 @@ pub struct Context {
     pub vertical_synchronization: bool,
 }
 
+#[allow(dead_code)]
 impl Context {
-    pub fn new(gbm: gbm::Gbm, vertical_synchronization: bool) -> Self {
+    pub fn new(gbm: gbm_rs::Gbm, vertical_synchronization: bool) -> Self {
         let display = get_display(&gbm);
         let (major, minor) = egl_initialize(display);
         let config = get_config(display);
@@ -52,59 +53,59 @@ impl Context {
         self.height
     }
 
-    pub fn initialize(&mut self) {
-        let surface = self.gbm.get_surface_mut();
+    // pub fn initialize(&mut self, drm: drm_rs::Drm) {
+    //     let surface = self.gbm.get_surface_mut();
 
-        let display_handle = self.display;
-        let surface_handle = self.surface;
+    //     let display_handle = self.display;
+    //     let surface_handle = self.surface;
 
-        let func = |display: *const libc::c_void, surface: *const libc::c_void| {
-            unsafe {
-                crate::ffi::eglSwapBuffers(display as _, surface as _)
-             }
-        };
-        surface.register_swap_callback((func, display_handle as _, surface_handle as _));
+    //     let func = |display: *const libc::c_void, surface: *const libc::c_void| {
+    //         unsafe {
+    //             crate::ffi::eglSwapBuffers(display as _, surface as _)
+    //          }
+    //     };
+    //     surface.register_swap_callback((func, display_handle as _, surface_handle as _));
 
         
-        let (_, fb) = surface.lock();
-        let drm_fd = self.gbm.get_drm().get_fd();
-        let drm_crtc_id = self.gbm.get_drm().get_crtc().get_id();
-        let drm_connector_ids = &vec![self.gbm.get_drm().get_connector().get_id()];
-        let drm_mode = self.gbm.get_drm().get_mode().get_handle();
-        match drm::set_crtc(drm_fd, drm_crtc_id, fb as _, 0, 0, drm_connector_ids.as_ptr(), drm_connector_ids.len() as _, drm_mode) {
-            result if result == 0 => result,
-            _ => panic!("surface initialize set_crtc error")
-        };
-    }
+    //     let (_, fb) = surface.lock();
+    //     let drm_fd = drm.get_fd();
+    //     let drm_crtc_id = drm.crtc.get_id();
+    //     let drm_connector_ids = &vec![drm.connector.get_id()];
+    //     let drm_mode = drm.get_mode().get_handle();
+    //     match drm_rs::set_crtc(drm_fd, drm_crtc_id, fb as _, 0, 0, drm_connector_ids.as_ptr(), drm_connector_ids.len() as _, drm_mode) {
+    //         result if result == 0 => result,
+    //         _ => panic!("surface initialize set_crtc error")
+    //     };
+    // }
 
-    pub fn update(&mut self) {
-        let fd = self.gbm.get_drm().get_fd();
-        let crtc_id = self.gbm.get_drm().get_crtc().get_id();
+    // pub fn update(&mut self, drm: drm_rs::Drm) {
+    //     let fd = drm.get_fd();
+    //     let crtc_id = drm.crtc.get_id();
 
-        let surface = self.gbm.get_surface_mut();
-        let (_, fb) = surface.lock();
-        if self.vertical_synchronization {
-            vertical_synchronization(fd, crtc_id, fb);
-        }
-    }
+    //     let surface = self.gbm.get_surface_mut();
+    //     let (_, fb) = surface.lock();
+    //     if self.vertical_synchronization {
+    //         vertical_synchronization(fd, crtc_id, fb);
+    //     }
+    // }
 
 }
 
 fn vertical_synchronization(fd: RawFd, crtc_id: libc::c_uint, fb: libc::c_uint) {
-    let evt_context = drm::def::EventContext {
+    let evt_context = drm_rs::models::EventContext {
         version: DRM_CONTEXT_VERSION,
         vblank_handler,
         page_flip_handler,
     };
 
     let mut user_data = 1;
-    match drm::page_flip( fd, crtc_id, fb as _, drm::def::PageFlipFlags::FLIP_EVENT, &mut user_data as *mut libc::c_int as _) {
+    match drm_rs::page_flip( fd, crtc_id, fb as _, drm_rs::enums::PageFlipFlags::FLIP_EVENT, &mut user_data as *mut libc::c_int as _) {
         result if result != 0 => panic!("page_flip error"),
         _ => {}
     }
 
     while user_data != 0 {
-        let r = drm::handle_event(fd, &evt_context as *const _ as _);
+        let r = drm_rs::handle_event(fd, &evt_context as *const _ as _);
         if r != 0 {
             panic!("handle_event result: {:?}", r);
         }

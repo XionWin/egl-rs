@@ -1,9 +1,9 @@
-use std::{ffi::CStr, vec};
 use crate::ffi::{EGLNativeWindowType, EglConfig, EglContext, EglDisplay, EglSurface};
+use std::{ffi::CStr, vec};
 
 const EGL_PLATFORM_GBM_KHR: libc::c_uint = 0x31D7;
 
-pub(crate) fn get_display(gbm: &gbm::Gbm) -> EglDisplay {
+pub(crate) fn get_display(gbm: &gbm_rs::Gbm) -> EglDisplay {
     let version = get_version_by_display(std::ptr::null());
     println!("version: {:?}", version);
     let vendor = get_vendor_by_display(std::ptr::null());
@@ -11,11 +11,12 @@ pub(crate) fn get_display(gbm: &gbm::Gbm) -> EglDisplay {
     let extensions = get_extensions_by_display(std::ptr::null());
     println!("extensions: {:?}", extensions);
 
+    let device_handle = gbm.get_surface().get_device().get_handle();
     let display = match extensions {
         Some(extensions) if extensions.contains("EGL_EXT_platform_base") => {
             get_egl_get_platform_display_ext_func("eglGetPlatformDisplayEXT")(
                 EGL_PLATFORM_GBM_KHR,
-                gbm.get_surface().get_device().get_handle(),
+                device_handle,
                 std::ptr::null(),
             )
         }
@@ -89,19 +90,11 @@ pub(crate) fn get_context(
     get_egl_context(display, config, attrib_list)
 }
 
-pub(crate) fn get_surface(
-    display: EglDisplay,
-    config: EglConfig,
-    gbm: &gbm::Gbm,
-) -> EglSurface {
+pub(crate) fn get_surface(display: EglDisplay, config: EglConfig, gbm: &gbm_rs::Gbm) -> EglSurface {
     get_egl_surface(display, config, gbm.get_surface().get_handle() as _)
 }
 
-pub(crate) fn egl_make_current(
-    display: EglDisplay,
-    surface: EglSurface,
-    context: EglContext,
-) {
+pub(crate) fn egl_make_current(display: EglDisplay, surface: EglSurface, context: EglContext) {
     if !unsafe { crate::ffi::eglMakeCurrent(display, surface, surface, context) } {
         panic!("[EGL] Failed to make current, error {:?}", unsafe {
             crate::ffi::eglGetError()
@@ -116,9 +109,11 @@ pub(crate) fn get_egl_surface(
 ) -> EglSurface {
     match unsafe { crate::ffi::eglCreateWindowSurface(display, config, native_wnd_handle, 0 as _) }
     {
-        handle if handle.is_null() => panic!("[EGL] Failed to create egl surface, error {:?}", unsafe {
-            crate::ffi::eglGetError()
-        }),
+        handle if handle.is_null() => {
+            panic!("[EGL] Failed to create egl surface, error {:?}", unsafe {
+                crate::ffi::eglGetError()
+            })
+        }
         handle => handle,
     }
 }
@@ -129,9 +124,11 @@ pub(crate) fn get_egl_context(
     attrib_list: *const libc::c_int,
 ) -> EglContext {
     match unsafe { crate::ffi::eglCreateContext(display, config, 0 as _, attrib_list) } {
-        handle if handle.is_null() => panic!("[EGL] Failed to create egl context, error {:?}", unsafe {
-            crate::ffi::eglGetError()
-        }),
+        handle if handle.is_null() => {
+            panic!("[EGL] Failed to create egl context, error {:?}", unsafe {
+                crate::ffi::eglGetError()
+            })
+        }
         handle => handle,
     }
 }
@@ -143,7 +140,13 @@ pub(crate) fn get_egl_config_count(
     let mut num_configs = 0;
 
     match unsafe {
-        crate::ffi::eglChooseConfig(display, desired_config, std::ptr::null(), 0, &mut num_configs)
+        crate::ffi::eglChooseConfig(
+            display,
+            desired_config,
+            std::ptr::null(),
+            0,
+            &mut num_configs,
+        )
     } {
         true if num_configs == 0 => {
             panic!("No matched eglConfig");
@@ -179,16 +182,15 @@ pub(crate) fn get_egl_configs(
         false => {
             panic!("eglChooseConfig error");
         }
-        _ => { configs }
+        _ => configs,
     }
 }
 
 pub(crate) fn bind_egl_api(render_api: crate::def::RenderAPI) {
     if !unsafe { crate::ffi::eglBindAPI(render_api) } {
-        panic!(
-            "[EGL] Failed to bind EGL Api: {:?}",
-            unsafe { crate::ffi::eglGetError() }
-        );
+        panic!("[EGL] Failed to bind EGL Api: {:?}", unsafe {
+            crate::ffi::eglGetError()
+        });
     }
 }
 
@@ -205,19 +207,28 @@ pub(crate) fn get_egl_get_platform_display_ext_func(
 
 pub(crate) fn get_version_by_display(display: EglDisplay) -> Option<String> {
     unsafe {
-        get_str_from_ptr(crate::ffi::eglQueryString(display, crate::def::Definition::VERSION))
+        get_str_from_ptr(crate::ffi::eglQueryString(
+            display,
+            crate::def::Definition::VERSION,
+        ))
     }
 }
 
 pub(crate) fn get_vendor_by_display(display: EglDisplay) -> Option<String> {
     unsafe {
-        get_str_from_ptr(crate::ffi::eglQueryString(display, crate::def::Definition::VENDOR))
+        get_str_from_ptr(crate::ffi::eglQueryString(
+            display,
+            crate::def::Definition::VENDOR,
+        ))
     }
 }
 
 pub(crate) fn get_extensions_by_display(display: EglDisplay) -> Option<String> {
     unsafe {
-        get_str_from_ptr(crate::ffi::eglQueryString(display, crate::def::Definition::EXTENSIONS))
+        get_str_from_ptr(crate::ffi::eglQueryString(
+            display,
+            crate::def::Definition::EXTENSIONS,
+        ))
     }
 }
 

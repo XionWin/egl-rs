@@ -17,7 +17,7 @@ pub type EGLNativeWindowType = *const EGLNativeWindowTypeRaw;
 pub type EglSurface = *const EglSurfaceRaw;
 
 #[link(name = "EGL")]
-#[allow(improper_ctypes)]
+#[allow(improper_ctypes, dead_code)]
 extern "C" {
     pub fn eglGetError() -> crate::def::ErrorCode;
     pub fn eglQueryString(display: EglDisplay, name: libc::c_int) -> *const libc::c_char;

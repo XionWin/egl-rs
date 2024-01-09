@@ -5,7 +5,6 @@ mod definition;
 mod render_api;
 mod surface_type;
 
-
 pub use error_code::*;
 pub use attribute::*;
 pub use color_buffer_type::*;
