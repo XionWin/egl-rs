@@ -1,4 +1,4 @@
-use std::os::unix::prelude::RawFd;
+// use std::os::unix::prelude::RawFd;
 
 use super::extension::*;
 
@@ -33,8 +33,8 @@ impl Context {
         egl_make_current(display, surface, context);
 
         Self {
-            width: gbm.get_width(),
-            height: gbm.get_height(),
+            width: gbm.width,
+            height: gbm.height,
             gbm,
             display,
             config,
@@ -91,46 +91,46 @@ impl Context {
 
 }
 
-fn vertical_synchronization(fd: RawFd, crtc_id: libc::c_uint, fb: libc::c_uint) {
-    let evt_context = drm_rs::models::EventContext {
-        version: DRM_CONTEXT_VERSION,
-        vblank_handler,
-        page_flip_handler,
-    };
+// fn vertical_synchronization(fd: RawFd, crtc_id: libc::c_uint, fb: libc::c_uint) {
+//     let evt_context = drm_rs::models::EventContext {
+//         version: DRM_CONTEXT_VERSION,
+//         vblank_handler,
+//         page_flip_handler,
+//     };
 
-    let mut user_data = 1;
-    match drm_rs::page_flip( fd, crtc_id, fb as _, drm_rs::enums::PageFlipFlags::FLIP_EVENT, &mut user_data as *mut libc::c_int as _) {
-        result if result != 0 => panic!("page_flip error"),
-        _ => {}
-    }
+//     let mut user_data = 1;
+//     match drm_rs::page_flip( fd, crtc_id, fb as _, drm_rs::enums::PageFlipFlags::FLIP_EVENT, &mut user_data as *mut libc::c_int as _) {
+//         result if result != 0 => panic!("page_flip error"),
+//         _ => {}
+//     }
 
-    while user_data != 0 {
-        let r = drm_rs::handle_event(fd, &evt_context as *const _ as _);
-        if r != 0 {
-            panic!("handle_event result: {:?}", r);
-        }
-    }
-}
+//     while user_data != 0 {
+//         let r = drm_rs::handle_event(fd, &evt_context as *const _ as _);
+//         if r != 0 {
+//             panic!("handle_event result: {:?}", r);
+//         }
+//     }
+// }
 
 
-const DRM_CONTEXT_VERSION: libc::c_int = 2;
-extern fn vblank_handler(
-    _fd: libc::c_int,
-    _sequence: libc::c_uint,
-    _tv_sec: libc::c_uint,
-    _tv_usec: libc::c_uint,
-    _user_data: *mut libc::c_void,
-) {}
-extern fn page_flip_handler(
-    _fd: libc::c_int,
-    _sequence: libc::c_uint,
-    _tv_sec: libc::c_uint,
-    _tv_usec: libc::c_uint,
-    user_data: *mut libc::c_void,
-) {
-    unsafe {
-        *(user_data as *mut libc::c_int) = 0;
-    }
-}
+// const DRM_CONTEXT_VERSION: libc::c_int = 2;
+// extern fn vblank_handler(
+//     _fd: libc::c_int,
+//     _sequence: libc::c_uint,
+//     _tv_sec: libc::c_uint,
+//     _tv_usec: libc::c_uint,
+//     _user_data: *mut libc::c_void,
+// ) {}
+// extern fn page_flip_handler(
+//     _fd: libc::c_int,
+//     _sequence: libc::c_uint,
+//     _tv_sec: libc::c_uint,
+//     _tv_usec: libc::c_uint,
+//     user_data: *mut libc::c_void,
+// ) {
+//     unsafe {
+//         *(user_data as *mut libc::c_int) = 0;
+//     }
+// }
 
 

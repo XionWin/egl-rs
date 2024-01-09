@@ -37,14 +37,17 @@ pub(crate) fn get_display(gbm: &gbm_rs::Gbm) -> EglDisplay {
 }
 
 pub(crate) fn egl_initialize(display: EglDisplay) -> (libc::c_int, libc::c_int) {
+    println!("display: {:#?}", display);
     let (mut major, mut minor) = (0i32, 0i32);
-    if !unsafe { crate::ffi::eglInitialize(display, &mut major, &mut minor) } {
+    if unsafe { crate::ffi::eglInitialize(display, &mut major, &mut minor) } {
+        (major, minor)
+    }
+    else {
         panic!(
             "[EGL] Failed to initialize EGL display. Error code: {:?}",
             unsafe { crate::ffi::eglGetError() }
         );
     }
-    (major, minor)
 }
 
 pub(crate) fn get_config(display: EglDisplay) -> EglConfig {
