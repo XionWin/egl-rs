@@ -33,8 +33,8 @@ impl Context {
         egl_make_current(display, surface, context);
 
         Self {
-            width: gbm.width,
-            height: gbm.height,
+            width: gbm.get_width(),
+            height: gbm.get_height(),
             gbm,
             display,
             config,
