@@ -18,9 +18,23 @@ pub struct Context {
 #[allow(dead_code)]
 impl Context {
     pub fn new(gbm: gbm_rs::Gbm, vertical_synchronization: bool) -> Self {
-        let display = get_display(&gbm);
+        let version = get_version_by_display(std::ptr::null());
+        println!("client version: {:?}", version);
+        let vendor = get_vendor_by_display(std::ptr::null());
+        println!("client vendor: {:?}", vendor);
+        let extensions = get_extensions_by_display(std::ptr::null()).expect("Get client extensions error");
+        println!("client extensions: {:?}", extensions);
+
+        let display = get_display(&gbm, &extensions);
         let (major, minor) = egl_initialize(display);
         let config = get_config(display);
+
+        let version = get_version_by_display(display);
+        println!("display version: {:?}", version);
+        let vendor = get_vendor_by_display(display);
+        println!("display vendor: {:?}", vendor);
+        let extensions = get_extensions_by_display(display);
+        println!("display extensions: {:?}", extensions);
 
         let context_attrib = [
             crate::def::Definition::CONTEXT_CLIENT_VERSION,

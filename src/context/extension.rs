@@ -3,29 +3,18 @@ use std::{ffi::CStr, vec};
 
 const EGL_PLATFORM_GBM_KHR: libc::c_uint = 0x31D7;
 
-pub(crate) fn get_display(gbm: &gbm_rs::Gbm) -> EglDisplay {
-    let version = get_version_by_display(std::ptr::null());
-    println!("version: {:?}", version);
-    let vendor = get_vendor_by_display(std::ptr::null());
-    println!("vendor: {:?}", vendor);
-    let extensions = get_extensions_by_display(std::ptr::null());
-    println!("client extensions: {:?}", extensions);
+pub(crate) fn get_display(gbm: &gbm_rs::Gbm, extensions: &str) -> EglDisplay {
 
     let device_handle = gbm.get_surface().get_device().get_handle();
-    let display = match extensions {
-        Some(extensions) if extensions.contains("EGL_EXT_platform_base") => {
+    let display = match extensions.contains("EGL_EXT_platform_base") {
+        true => {
             get_egl_get_platform_display_ext_func("eglGetPlatformDisplayEXT")(
                 EGL_PLATFORM_GBM_KHR,
                 device_handle,
                 std::ptr::null(),
             )
-        }
-        None => {
-            panic!("Get \"eglGetPlatformDisplayEXT\" error");
-        }
-        _ => {
-            panic!("Can't get \"EGL_EXT_platform_base\" in extensions");
-        }
+        },
+        _ => panic!("Can't get \"EGL_EXT_platform_base\" in extensions")
     };
 
     match display {
