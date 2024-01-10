@@ -13,7 +13,7 @@ pub struct Context {
     pub version: (libc::c_int, libc::c_int),
     pub width: libc::c_int,
     pub height: libc::c_int,
-    pub vertical_synchronization: bool,
+    pub is_vertical_synchronize: bool,
 }
 
 #[allow(dead_code)]
@@ -45,7 +45,7 @@ impl Context {
             context,
             surface,
             version: (major, minor),
-            vertical_synchronization,
+            is_vertical_synchronize: vertical_synchronization,
         }
     }
 
@@ -56,7 +56,6 @@ impl Context {
     pub fn get_height(&self) -> libc::c_int {
         self.height
     }
-
 
     // pub fn initialize(&mut self, drm: drm_rs::Drm) {
     //     let surface = self.gbm.get_surface_mut();
@@ -137,9 +136,6 @@ impl Context {
 //     }
 // }
 
-pub fn swap_buffers(display: *const libc::c_void, surface: *const libc::c_void) -> bool {
-    unsafe { crate::ffi::eglSwapBuffers(display as _, surface as _) }
-}
 
 fn print_debug_display_info(display: EglDisplay) {
     let name = if display == std::ptr::null() {"client"} else {"display"};

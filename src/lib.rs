@@ -31,3 +31,7 @@ pub mod def;
 
 pub use context::*;
 
+pub fn swap_buffers(display: *const libc::c_void, surface: *const libc::c_void) -> bool {
+    unsafe { crate::ffi::eglSwapBuffers(display as _, surface as _) }
+}
+
