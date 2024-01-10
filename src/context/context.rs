@@ -1,5 +1,3 @@
-// use std::os::unix::prelude::RawFd;
-use crate::ffi::EglSurface;
 use std::os::fd::RawFd;
 
 use super::extension::*;
