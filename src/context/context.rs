@@ -1,5 +1,5 @@
 // use std::os::unix::prelude::RawFd;
-
+use crate::ffi::EglDisplay;
 use std::os::fd::RawFd;
 
 use super::extension::*;
@@ -19,23 +19,13 @@ pub struct Context {
 #[allow(dead_code)]
 impl Context {
     pub fn new(surface_fd: RawFd, device_fd: RawFd, width: libc::c_int, height: libc::c_int, vertical_synchronization: bool) -> Self {
-        let version = get_version_by_display(std::ptr::null());
-        println!("client version: {:?}", version);
-        let vendor = get_vendor_by_display(std::ptr::null());
-        println!("client vendor: {:?}", vendor);
+        print_debug_display_info(std::ptr::null());
         let extensions = get_extensions_by_display(std::ptr::null()).expect("Get client extensions error");
-        println!("client extensions: {:?}", extensions);
 
         let display = get_display(device_fd, &extensions);
         let (major, minor) = egl_initialize(display);
         let config = get_config(display);
-
-        let version = get_version_by_display(display);
-        println!("display version: {:?}", version);
-        let vendor = get_vendor_by_display(display);
-        println!("display vendor: {:?}", vendor);
-        let extensions = get_extensions_by_display(display);
-        println!("display extensions: {:?}", extensions);
+        print_debug_display_info(display);
 
         let context_attrib = [
             crate::def::Definition::CONTEXT_CLIENT_VERSION,
@@ -126,7 +116,6 @@ impl Context {
 //     }
 // }
 
-
 // const DRM_CONTEXT_VERSION: libc::c_int = 2;
 // extern fn vblank_handler(
 //     _fd: libc::c_int,
@@ -146,5 +135,17 @@ impl Context {
 //         *(user_data as *mut libc::c_int) = 0;
 //     }
 // }
+
+fn print_debug_display_info(display: EglDisplay) {
+    let name = if display == std::ptr::null() {"client"} else {"display"};
+    
+    let version = get_version_by_display(display);
+    colored_rs::print_debug!("{name} version: {version:?}");
+    let vendor = get_vendor_by_display(display);
+    colored_rs::print_debug!("{name} vendor: {vendor:?}");
+    let extensions = get_extensions_by_display(display);
+    colored_rs::print_debug!("{name} extensions: {extensions:?}");
+}
+
 
 
