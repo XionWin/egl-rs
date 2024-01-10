@@ -1,5 +1,5 @@
 // use std::os::unix::prelude::RawFd;
-use crate::ffi::EglDisplay;
+use crate::ffi::{EglDisplay, EglSurface};
 use std::os::fd::RawFd;
 
 use super::extension::*;
@@ -56,6 +56,7 @@ impl Context {
     pub fn get_height(&self) -> libc::c_int {
         self.height
     }
+
 
     // pub fn initialize(&mut self, drm: drm_rs::Drm) {
     //     let surface = self.gbm.get_surface_mut();
@@ -135,6 +136,10 @@ impl Context {
 //         *(user_data as *mut libc::c_int) = 0;
 //     }
 // }
+
+pub fn swap_buffers(display: *const libc::c_void, surface: *const libc::c_void) -> bool {
+    unsafe { crate::ffi::eglSwapBuffers(display as _, surface as _) }
+}
 
 fn print_debug_display_info(display: EglDisplay) {
     let name = if display == std::ptr::null() {"client"} else {"display"};
