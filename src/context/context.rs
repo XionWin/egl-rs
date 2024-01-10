@@ -1,5 +1,7 @@
 use std::os::fd::RawFd;
 
+use crate::ffi::EglDisplay;
+
 use super::extension::*;
 
 #[derive(Debug)]
