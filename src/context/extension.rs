@@ -25,7 +25,6 @@ pub(crate) fn get_display(device_fd: RawFd, extensions: &str) -> EglDisplay {
 }
 
 pub(crate) fn egl_initialize(display: EglDisplay) -> (libc::c_int, libc::c_int) {
-    println!("display: {:#?}", display);
     let (mut major, mut minor) = (0i32, 0i32);
     if unsafe { crate::ffi::eglInitialize(display, &mut major, &mut minor) } {
         (major, minor)
