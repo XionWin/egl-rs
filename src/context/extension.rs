@@ -1,15 +1,15 @@
 use crate::ffi::{EGLNativeWindowType, EglConfig, EglContext, EglDisplay, EglSurface};
-use std::{ffi::CStr, vec, os::fd::RawFd};
+use std::{ffi::CStr, vec};
 
 const EGL_PLATFORM_GBM_KHR: libc::c_uint = 0x31D7;
 
-pub(crate) fn get_display(device_fd: RawFd, extensions: &str) -> EglDisplay {
+pub(crate) fn get_display(device_handle: *const libc::c_void, extensions: &str) -> EglDisplay {
 
     let display = match extensions.contains("EGL_EXT_platform_base") {
         true => {
             get_egl_get_platform_display_ext_func("eglGetPlatformDisplayEXT")(
                 EGL_PLATFORM_GBM_KHR,
-                device_fd as _,
+                device_handle,
                 std::ptr::null(),
             )
         },
@@ -80,8 +80,8 @@ pub(crate) fn get_context(
     get_egl_context(display, config, attrib_list)
 }
 
-pub(crate) fn get_surface(display: EglDisplay, config: EglConfig, surface_fd: RawFd) -> EglSurface {
-    get_egl_surface(display, config, surface_fd as _)
+pub(crate) fn get_surface(display: EglDisplay, config: EglConfig, surface_handle: *const libc::c_void) -> EglSurface {
+    get_egl_surface(display, config, surface_handle as _)
 }
 
 pub(crate) fn egl_make_current(display: EglDisplay, surface: EglSurface, context: EglContext) {
@@ -186,7 +186,7 @@ pub(crate) fn bind_egl_api(render_api: crate::def::RenderAPI) {
 
 pub(crate) fn get_egl_get_platform_display_ext_func(
     func_name: &str,
-) -> extern "C" fn(libc::c_uint, libc::c_uint, *const libc::c_uint) -> EglDisplay {
+) -> extern "C" fn(libc::c_uint, *const libc::c_void, *const libc::c_uint) -> EglDisplay {
     let mut func_name = String::from(func_name)
         .bytes()
         .collect::<Vec<libc::c_char>>();

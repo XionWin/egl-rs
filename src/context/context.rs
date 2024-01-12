@@ -1,5 +1,3 @@
-use std::os::fd::RawFd;
-
 use crate::ffi::EglDisplay;
 
 use super::extension::*;
@@ -18,11 +16,11 @@ pub struct Context {
 
 #[allow(dead_code)]
 impl Context {
-    pub fn new(surface_fd: RawFd, device_fd: RawFd, width: libc::c_int, height: libc::c_int, vertical_synchronization: bool) -> Self {
+    pub fn new(surface_handle: *const libc::c_void, device_handle: *const libc::c_void, width: libc::c_int, height: libc::c_int, vertical_synchronization: bool) -> Self {
         print_debug_display_info(std::ptr::null());
         let extensions = get_extensions_by_display(std::ptr::null()).expect("Get client extensions error");
 
-        let display = get_display(device_fd, &extensions);
+        let display = get_display(device_handle, &extensions);
         let (major, minor) = egl_initialize(display);
         let config = get_config(display);
         print_debug_display_info(display);
@@ -33,7 +31,7 @@ impl Context {
             crate::def::Definition::NONE,
         ];
         let context = get_context(display, config, &context_attrib as _);
-        let surface = get_surface(display, config, surface_fd);
+        let surface = get_surface(display, config, surface_handle);
 
         egl_make_current(display, surface, context);
 
