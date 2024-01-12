@@ -1,7 +1,6 @@
 #[repr(C)]
 pub struct EglDisplayRaw {} 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
 pub struct EglConfigRaw {} 
 #[repr(C)]
 pub struct EglContextRaw {} 
