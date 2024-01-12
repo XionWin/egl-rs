@@ -1,4 +1,4 @@
-use crate::ffi::{EGLNativeWindowType, EglConfig, EglContext, EglDisplay, EglSurface};
+use crate::{ffi::{EGLNativeWindowType, EglConfig, EglContext, EglDisplay, EglSurface}, def::SurfaceType};
 use std::{ffi::CStr, vec};
 
 const EGL_PLATFORM_GBM_KHR: libc::c_uint = 0x31D7;
@@ -37,7 +37,7 @@ pub(crate) fn egl_initialize(display: EglDisplay) -> (libc::c_int, libc::c_int) 
     }
 }
 
-pub(crate) fn get_config(display: EglDisplay) -> EglConfig {
+pub(crate) fn get_config(display: EglDisplay, surface_type: SurfaceType) -> EglConfig {
     match get_extensions_by_display(display) {
         Some(extensions) if !extensions.contains("EGL_EXT_image_dma_buf_import_modifiers") => {
             panic!("Can't get \"EGL_EXT_image_dma_buf_import_modifiers\" in extensions")
@@ -45,12 +45,12 @@ pub(crate) fn get_config(display: EglDisplay) -> EglConfig {
         None => panic!("Get \"eglGetPlatformDisplayEXT\" error"),
         _ => {}
     };
-    bind_egl_api(crate::def::RenderAPI::GLES);
+    egl_bind_api(crate::def::RenderAPI::GLES);
     let desired_config = [
         crate::def::Definition::SURFACE_TYPE,
-        crate::def::SurfaceType::OpenGLES as _,
+        surface_type.get_definition(),
         crate::def::Definition::RENDERABLE_TYPE,
-        crate::def::Definition::OPENGL_ES2_BIT,
+        surface_type.get_definition(),
         crate::def::Definition::RED_SIZE,
         8,
         crate::def::Definition::GREEN_SIZE,
@@ -176,7 +176,7 @@ pub(crate) fn get_egl_configs(
     }
 }
 
-pub(crate) fn bind_egl_api(render_api: crate::def::RenderAPI) {
+pub(crate) fn egl_bind_api(render_api: crate::def::RenderAPI) {
     if !unsafe { crate::ffi::eglBindAPI(render_api) } {
         panic!("[EGL] Failed to bind EGL Api: {:?}", unsafe {
             crate::ffi::eglGetError()

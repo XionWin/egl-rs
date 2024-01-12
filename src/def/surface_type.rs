@@ -1,11 +1,32 @@
+use super::Definition;
+
 #[repr(i32)]
+#[derive(Debug, Clone, Copy)]
 pub enum SurfaceType
 {
-    OpenGL = crate::def::Definition::OPENGL_BIT,
+    OpenGL( libc::c_int ),
     // OpenGLES = Definition.OPENGL_ES_BIT,
     // OpenOpenGLES = Definition.OPENGL_ES2_BIT,
     // OpenGLESV3 = Definition.OPENGL_ES3_BIT,
 
-    OpenGLES = crate::def::Definition::OPENGL_ES2_BIT,
-    // Window = crate::def::Definition::WINDOW_BIT,
+    OpenGlesV2,
+    OpenGlesV3,
+    // Window = Definition::WINDOW_BIT,
+}
+
+impl SurfaceType {
+    pub fn get_definition(&self) -> libc::c_int {
+        match self {
+            SurfaceType::OpenGL(_) => Definition::OPENGL_BIT,
+            SurfaceType::OpenGlesV2 => Definition::OPENGL_ES2_BIT,
+            SurfaceType::OpenGlesV3 => Definition::OPENGL_ES3_BIT
+        }
+    }
+    pub fn get_version(&self) -> libc::c_int {
+        match self {
+            SurfaceType::OpenGL(v) => v.to_owned(),
+            SurfaceType::OpenGlesV2 => 2,
+            SurfaceType::OpenGlesV3 => 3
+        }
+    }
 }

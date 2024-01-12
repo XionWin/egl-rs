@@ -1,4 +1,4 @@
-use crate::ffi::EglDisplay;
+use crate::{ffi::EglDisplay, def::SurfaceType};
 
 use super::extension::*;
 
@@ -16,18 +16,18 @@ pub struct Context {
 
 #[allow(dead_code)]
 impl Context {
-    pub fn new(surface_handle: *const libc::c_void, device_handle: *const libc::c_void, width: libc::c_int, height: libc::c_int, vertical_synchronization: bool) -> Self {
+    pub fn new(surface_handle: *const libc::c_void, device_handle: *const libc::c_void, surface_type: SurfaceType, width: libc::c_int, height: libc::c_int, vertical_synchronization: bool) -> Self {
         print_debug_display_info(std::ptr::null());
         let extensions = get_extensions_by_display(std::ptr::null()).expect("Get client extensions error");
 
         let display = get_display(device_handle, &extensions);
         let (major, minor) = egl_initialize(display);
-        let config = get_config(display);
+        let config = get_config(display, surface_type);
         print_debug_display_info(display);
 
         let context_attrib = [
             crate::def::Definition::CONTEXT_CLIENT_VERSION,
-            2,
+            surface_type.get_version(),
             crate::def::Definition::NONE,
         ];
         let context = get_context(display, config, &context_attrib as _);
