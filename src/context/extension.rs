@@ -197,7 +197,7 @@ pub(crate) fn get_egl_get_platform_display_ext_func(
 
 pub(crate) fn get_version_by_display(display: EglDisplay) -> Option<String> {
     unsafe {
-        get_str_from_ptr(crate::ffi::eglQueryString(
+        get_string_from_ptr(crate::ffi::eglQueryString(
             display,
             crate::def::Definition::VERSION,
         ))
@@ -206,7 +206,7 @@ pub(crate) fn get_version_by_display(display: EglDisplay) -> Option<String> {
 
 pub(crate) fn get_vendor_by_display(display: EglDisplay) -> Option<String> {
     unsafe {
-        get_str_from_ptr(crate::ffi::eglQueryString(
+        get_string_from_ptr(crate::ffi::eglQueryString(
             display,
             crate::def::Definition::VENDOR,
         ))
@@ -215,14 +215,14 @@ pub(crate) fn get_vendor_by_display(display: EglDisplay) -> Option<String> {
 
 pub(crate) fn get_extensions_by_display(display: EglDisplay) -> Option<String> {
     unsafe {
-        get_str_from_ptr(crate::ffi::eglQueryString(
+        get_string_from_ptr(crate::ffi::eglQueryString(
             display,
             crate::def::Definition::EXTENSIONS,
         ))
     }
 }
 
-pub(crate) fn get_str_from_ptr(ptr: *const libc::c_char) -> Option<String> {
+pub(crate) fn get_string_from_ptr(ptr: *const libc::c_char) -> Option<String> {
     match ptr {
         ptr if ptr != std::ptr::null() => Some(String::from(
             unsafe { CStr::from_ptr(ptr) }.to_str().unwrap(),
