@@ -1,6 +1,6 @@
 // pub fn test(gbm: gbm::Gbm, func_name: &str) {
 //     let func_name = String::from(func_name);
-//     let mut func_name = func_name.bytes().collect::<Vec<libc::c_char>>();
+//     let mut func_name = func_name.bytes().collect::<Vec<_>>();
 //     func_name.push(b'\0');
 
 //     unsafe {

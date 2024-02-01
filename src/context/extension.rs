@@ -189,7 +189,7 @@ pub(crate) fn get_egl_get_platform_display_ext_func(
 ) -> extern "C" fn(libc::c_uint, *const libc::c_void, *const libc::c_uint) -> EglDisplay {
     let mut func_name = String::from(func_name)
         .bytes()
-        .collect::<Vec<libc::c_char>>();
+        .collect::<Vec<_>>();
     func_name.push(b'\0');
 
     unsafe { std::mem::transmute(crate::ffi::eglGetProcAddress(func_name.as_ptr())) }
